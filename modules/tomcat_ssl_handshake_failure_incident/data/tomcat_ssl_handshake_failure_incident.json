@@ -1,0 +1,162 @@
+{
+  "name": "tomcat_ssl_handshake_failure_incident",
+  "description": "This incident type usually occurs when there is a failure in the SSL Handshake process between a client and server running on a Tomcat web server. This can happen for various reasons such as incorrect SSL certificate configuration, cipher suite mismatches, or network connectivity issues. When this type of incident is not resolved quickly, it can lead to downtime or service disruptions for users trying to access the affected service.",
+  "params": [
+    {
+      "name": "PATH_TO_SSL_CERTIFICATE",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CERTIFICATE",
+      "value": ""
+    },
+    {
+      "name": "HOSTNAME",
+      "value": ""
+    },
+    {
+      "name": "CLIENT_CIPHER_SUITE",
+      "value": ""
+    },
+    {
+      "name": "PORT_NUMBER",
+      "value": ""
+    },
+    {
+      "name": "CIPHER_SUITE",
+      "value": ""
+    },
+    {
+      "name": "SERVER_CIPHER_SUITE",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Tomcat SSL Handshake Failure Incident\nThis incident type usually occurs when there is a failure in the SSL Handshake process between a client and server running on a Tomcat web server. This can happen for various reasons such as incorrect SSL certificate configuration, cipher suite mismatches, or network connectivity issues. When this type of incident is not resolved quickly, it can lead to downtime or service disruptions for users trying to access the affected service."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Tomcat service is running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `systemctl status tomcat.service`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Tomcat server.xml file for SSL configuration"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep -i \"ssl\" /etc/tomcat/conf/server.xml`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if SSL certificate is valid and not expired"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl x509 -enddate -noout -in ${PATH_TO_SSL_CERTIFICATE}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if SSL certificate is configured correctly"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl s_client -connect ${HOSTNAME}:${PORT_NUMBER} -tls1_2`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if cipher suites are configured correctly"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `openssl s_client -connect ${HOSTNAME}:${PORT_NUMBER} -tls1_2 -cipher ${CIPHER_SUITE}`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check network connectivity between client and server"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ping ${HOSTNAME}`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check firewall rules to ensure they are not blocking SSL traffic"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `iptables -L`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the SSL certificate configuration and make sure that it is valid and properly installed on the server."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_check_certificate($PATH_TO_CERTIFICATE)"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Verify that the cipher suites used by the client and server are compatible and properly configured. If necessary, update the cipher suite configuration on either the client or server to match the other."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_cipher_suites($CLIENT_CIPHER_SUITE, $SERVER_CIPHER_SUITE)"
+    }
+  ]
+}
